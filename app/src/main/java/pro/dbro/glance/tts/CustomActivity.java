@@ -13,6 +13,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
+
 import com.astuetz.PagerSlidingTabStrip;
 import com.squareup.otto.Bus;
 import pro.dbro.glance.AppSpritzer;
@@ -47,7 +49,6 @@ public class CustomActivity extends ImmersiveActivityBase {
   	    LocalBroadcastManager.getInstance(this).
   	    sendBroadcast(sendableIntent);
 
-       finish();
     }
 
     @Override
@@ -85,7 +86,6 @@ public class CustomActivity extends ImmersiveActivityBase {
         setContentView(R.layout.activity_custom);
 
 
-        spritzerTextView = (SpritzerTextView)findViewById(R.id.spritzText);
 
         // Retain the SpritzFragment instance so it survives screen rotation
 //                  SpritzFragment frag = new SpritzFragment();
@@ -94,6 +94,8 @@ public class CustomActivity extends ImmersiveActivityBase {
 //                          .replace(R.id.container, frag, "SPT")
 //                          .commit();
 
+        WindowManager windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
+//        Util.generateView(this);
 
     }
 
@@ -123,19 +125,6 @@ public class CustomActivity extends ImmersiveActivityBase {
 //
 //        mSpritzer.setTextAndStart(data,sSpritzerCallback,true);
         System.out.println(data);
-
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try{
-                    Thread.sleep(2000);
-                }
-                catch(Exception e) {
-
-                }
-                doFinish();
-            }
-        }).start();
     }
 
 

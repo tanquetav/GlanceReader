@@ -152,53 +152,29 @@ public class GlanceTtsService extends TextToSpeechService {
 //				shareIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
 
 
-		//		startActivity(shareIntent);
+				//		startActivity(shareIntent);
 
 
 				windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
 
-				spritzerTextView = new SpritzerTextView(GlanceTtsService.this);
-				AppSpritzer mSpritzer = new AppSpritzer(null, spritzerTextView);
-				spritzerTextView.setSpritzer(mSpritzer);
-				mSpritzer.setWpm(150);
-
-//				spritzerTextView = new TextView(GlanceTtsService.this);
-				spritzerTextView.setBackgroundColor(0xFF000000);
-				spritzerTextView.setTextColor(0xFFFFFFFF);
-				spritzerTextView.setTextSize(30, TypedValue.COMPLEX_UNIT_SP);
-				spritzerTextView.setTypeface(Typeface.MONOSPACE);
-				spritzerTextView.setText("Texte");
-				final WindowManager.LayoutParams params = new WindowManager.LayoutParams(
-						500,
-						90,
-						WindowManager.LayoutParams.TYPE_PHONE,
-						WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
-						PixelFormat.TRANSLUCENT);
-
-				params.gravity = Gravity.CENTER;
-				params.x = 0;
-				params.y = 100;
-
-				windowManager.addView(spritzerTextView, params);
-//				mSpritzer.setTextAndStart(text,mSplitzerCallback,true);
+				spritzerTextView = (SpritzerTextView) Util.generateView(GlanceTtsService.this);
+				spritzerTextView.getSpritzer().setTextAndStart(text, mSplitzerCallback, true);
 
 
-				System.out.println("PLaying: " + text);
-
+/*
 				new Thread(new Runnable() {
 					@Override
 					public void run() {
 						try {
 							Thread.sleep(2400);
 
-						}
-						catch (Exception e) {
+						} catch (Exception e) {
 
 						}
 						finish();
 					}
 				}).start();
-
+*/
 //				try {
 //					Thread.sleep(1400);
 //				} catch (InterruptedException e) {
@@ -213,16 +189,16 @@ public class GlanceTtsService extends TextToSpeechService {
 //        Log.e(LOG_TAG, rate.toString());
 //		mCallback.start(16000, AudioFormat.ENCODING_PCM_16BIT, 1);
 //		mEngine.synthesize(text);
-		System.out.println("Staring"+Thread.currentThread().getId());
+		sem = new Semaphore(0);
 
 		try {
 			sem.acquire();
 		} catch (InterruptedException e) {
 		}
 
-		System.out.println("Done"+Thread.currentThread().getId());
 		mCallback.done();
 	}
+
 	     /*
 	     +        Intent sendableIntent = new Intent("hehe");
 	     +        LocalBroadcastManager.getInstance(this).
