@@ -17,6 +17,28 @@
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/Dark" >
+
+        <service
+            android:name=".tts.GlanceTtsService"
+
+            android:label="@string/app_name" >
+            <intent-filter>
+                <action android:name="android.intent.action.TTS_SERVICE" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <meta-data
+                android:name="android.speech.tts"
+                android:resource="@xml/tts_engine" />
+        </service>
+
+        <activity android:name=".tts.CheckVoiceData"
+                android:theme="@android:style/Theme.NoDisplay">
+            <intent-filter>
+                <action android:name="android.speech.tts.engine.CHECK_TTS_DATA" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
         <activity android:name=".activities.MainActivity"
             android:theme="@style/Dark.Spritzer">
             <intent-filter>
@@ -26,6 +48,17 @@
 
                 <data android:mimeType="application/epub+zip" />
             </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity>
+        <activity android:name=".tts.CustomActivity"
+            android:theme="@style/Transparent.Spritzer">
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
 
