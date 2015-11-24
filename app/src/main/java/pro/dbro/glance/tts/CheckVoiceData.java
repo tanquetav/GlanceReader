@@ -11,6 +11,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Created by george on 11/18/15.
@@ -18,13 +19,16 @@ import java.util.List;
 public class CheckVoiceData extends Activity {
     private static final String TAG = "CheckVoiceData";
 
-    private static final String[] SUPPORTED_LANGUAGES = {
-            "uzbek", "eng-GBR", "eng-USA" ,"pt-BR"  ,"por" ,"eng","pt","por","por-BRA"
-    };
+    private String[] SUPPORTED_LANGUAGES = null;
+//    {
+//            "uzbek", "eng-GBR", "eng-USA" ,"pt-BR"  ,"por" ,"eng","pt","por","por-BRA"
+//    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        generateLanguageList();
 
         Intent intent = getIntent();
         List<String> checkLanguages = getCheckVoiceDataFor(intent);
@@ -76,6 +80,24 @@ public class CheckVoiceData extends Activity {
         finish();
     }
 
+    private void generateLanguageList() {
+        if ( SUPPORTED_LANGUAGES != null )return;
+        List<String> ss = new ArrayList<String>();
+        for (Locale locale : Locale.getAvailableLocales()) {
+            try {
+                if ("".equals(locale.getCountry())) {
+                    ss.add(locale.getISO3Language());
+                }
+                else {
+                    ss.add(locale.getISO3Language()+ "-" + locale.getISO3Country());
+                }
+            } catch (Exception e) {
+            }
+
+        }
+        SUPPORTED_LANGUAGES=ss.toArray(new String[]{});
+    }
+
     /**
      * The intent that launches this activity can contain an intent extra
      * {@link TextToSpeech.Engine.EXTRA_CHECK_VOICE_DATA_FOR} that might specify
@@ -102,6 +124,7 @@ public class CheckVoiceData extends Activity {
      * Checks whether a given language is in the list of supported languages.
      */
     private boolean isLanguageSupported(String input) {
+        generateLanguageList();
         for (String lang : SUPPORTED_LANGUAGES) {
             if (lang.equals(input)) {
                 return true;

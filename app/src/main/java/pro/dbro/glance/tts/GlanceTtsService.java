@@ -6,8 +6,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.graphics.PixelFormat;
-import android.graphics.Typeface;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.speech.tts.SynthesisCallback;
@@ -16,12 +14,10 @@ import android.speech.tts.TextToSpeech;
 import android.speech.tts.TextToSpeechService;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
-import android.util.TypedValue;
-import android.view.Gravity;
+import android.view.MotionEvent;
+import android.view.View;
 import android.view.WindowManager;
-import android.widget.ImageView;
-import android.widget.TextView;
-import pro.dbro.glance.AppSpritzer;
+
 import pro.dbro.glance.lib.Spritzer;
 import pro.dbro.glance.lib.SpritzerTextView;
 
@@ -52,11 +48,12 @@ public class GlanceTtsService extends TextToSpeechService {
 	private Spritzer.SpritzerCallback mSplitzerCallback = new Spritzer.SpritzerCallback() {
      @Override
      public void onSpritzerFinished() {
-         finish();
+         finish(false);
      }
  };
 	private SpritzerTextView  spritzerTextView;
 	private WindowManager windowManager;
+	private boolean error;
 
 	@Override
 	public void onCreate() {
@@ -147,40 +144,20 @@ public class GlanceTtsService extends TextToSpeechService {
 		hd.post(new Runnable() {
 			@Override
 			public void run() {
-//				Intent shareIntent = new Intent(Intent.ACTION_SEND, null, getApplicationContext(), CustomActivity.class);
-//				shareIntent.putExtra(Intent.EXTRA_TEXT, text);
-//				shareIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-
-
-				//		startActivity(shareIntent);
-
 
 				windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
 
 				spritzerTextView = (SpritzerTextView) Util.generateView(GlanceTtsService.this);
 				spritzerTextView.getSpritzer().setTextAndStart(text, mSplitzerCallback, true);
 
-
-/*
-				new Thread(new Runnable() {
+				spritzerTextView.setOnTouchListener(new View.OnTouchListener() {
 					@Override
-					public void run() {
-						try {
-							Thread.sleep(2400);
-
-						} catch (Exception e) {
-
-						}
-						finish();
+					public boolean onTouch(View view, MotionEvent motionEvent) {
+						finish(true);
+						return true;
 					}
-				}).start();
-*/
-//				try {
-//					Thread.sleep(1400);
-//				} catch (InterruptedException e) {
-//				}
-//
-//				finish();
+				});
+
 
 			}
 		});
@@ -195,8 +172,12 @@ public class GlanceTtsService extends TextToSpeechService {
 			sem.acquire();
 		} catch (InterruptedException e) {
 		}
-
-		mCallback.done();
+		if (error) {
+			mCallback.error();
+		}
+		else {
+			mCallback.done();
+		}
 	}
 
 	     /*
@@ -218,16 +199,19 @@ public class GlanceTtsService extends TextToSpeechService {
 			hd.post(new Runnable() {
 				@Override
 				public void run() {
-					finish();
+					finish(true);
 				}
 			});
 		}
 	};
 
-	private void finish() {
-		if ( mCallback != null) {
+	private void finish(boolean b) {
+		if ( mCallback != null && spritzerTextView!=null &&windowManager!=null) {
+			error=b;
 			windowManager.removeView(spritzerTextView);
 			sem.release();
+			spritzerTextView = null;
+			windowManager = null;
 //			mCallback.done();
 //			System.out.println("done");
 //			mCallback=null;
