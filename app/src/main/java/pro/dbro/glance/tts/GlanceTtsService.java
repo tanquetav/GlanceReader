@@ -1,38 +1,3 @@
-/*************************************************************************/
-/*                                                                       */
-/*                  Language Technologies Institute                      */
-/*                     Carnegie Mellon University                        */
-/*                         Copyright (c) 2010                            */
-/*                        All Rights Reserved.                           */
-/*                                                                       */
-/*  Permission is hereby granted, free of charge, to use and distribute  */
-/*  this software and its documentation without restriction, including   */
-/*  without limitation the rights to use, copy, modify, merge, publish,  */
-/*  distribute, sublicense, and/or sell copies of this work, and to      */
-/*  permit persons to whom this work is furnished to do so, subject to   */
-/*  the following conditions:                                            */
-/*   1. The code must retain the above copyright notice, this list of    */
-/*      conditions and the following disclaimer.                         */
-/*   2. Any modifications must be clearly marked as such.                */
-/*   3. Original authors' names are not deleted.                         */
-/*   4. The authors' names are not used to endorse or promote products   */
-/*      derived from this software without specific prior written        */
-/*      permission.                                                      */
-/*                                                                       */
-/*  CARNEGIE MELLON UNIVERSITY AND THE CONTRIBUTORS TO THIS WORK         */
-/*  DISCLAIM ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING      */
-/*  ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT   */
-/*  SHALL CARNEGIE MELLON UNIVERSITY NOR THE CONTRIBUTORS BE LIABLE      */
-/*  FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES    */
-/*  WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN   */
-/*  AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,          */
-/*  ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF       */
-/*  THIS SOFTWARE.                                                       */
-/*                                                                       */
-/*************************************************************************/
-/*             Author:  Alok Parlikar (aup@cs.cmu.edu)                   */
-/*               Date:  June 2012                                        */
-/*************************************************************************/
 
 package pro.dbro.glance.tts;
 
@@ -41,6 +6,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.PixelFormat;
+import android.graphics.Typeface;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.speech.tts.SynthesisCallback;
@@ -49,6 +16,14 @@ import android.speech.tts.TextToSpeech;
 import android.speech.tts.TextToSpeechService;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
+import android.util.TypedValue;
+import android.view.Gravity;
+import android.view.WindowManager;
+import android.widget.ImageView;
+import android.widget.TextView;
+import pro.dbro.glance.AppSpritzer;
+import pro.dbro.glance.lib.Spritzer;
+import pro.dbro.glance.lib.SpritzerTextView;
 
 import java.util.concurrent.Semaphore;
 
@@ -74,6 +49,14 @@ public class GlanceTtsService extends TextToSpeechService {
 
 	private HandlerThread ht = new HandlerThread("HELPER");
 
+	private Spritzer.SpritzerCallback mSplitzerCallback = new Spritzer.SpritzerCallback() {
+     @Override
+     public void onSpritzerFinished() {
+         finish();
+     }
+ };
+	private SpritzerTextView  spritzerTextView;
+	private WindowManager windowManager;
 
 	@Override
 	public void onCreate() {
@@ -116,6 +99,7 @@ public class GlanceTtsService extends TextToSpeechService {
 
 	@Override
 	protected void onStop() {
+
 		Log.v(LOG_TAG, "onStop");
 	}
 
@@ -154,7 +138,8 @@ public class GlanceTtsService extends TextToSpeechService {
 
 
 
-//		callback.start(16000,
+//		callback.start(16000,                   				new ImageView(this);
+
 //		                AudioFormat.ENCODING_PCM_16BIT, 1);
 
 		Handler hd = new Handler(ht.getLooper());
@@ -162,14 +147,58 @@ public class GlanceTtsService extends TextToSpeechService {
 		hd.post(new Runnable() {
 			@Override
 			public void run() {
-				Intent shareIntent = new Intent(Intent.ACTION_SEND, null, getApplicationContext(), CustomActivity.class);
-				shareIntent.putExtra(Intent.EXTRA_TEXT, text);
-				shareIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+//				Intent shareIntent = new Intent(Intent.ACTION_SEND, null, getApplicationContext(), CustomActivity.class);
+//				shareIntent.putExtra(Intent.EXTRA_TEXT, text);
+//				shareIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
 
 
-				startActivity(shareIntent);
+		//		startActivity(shareIntent);
+
+
+				windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
+
+				spritzerTextView = new SpritzerTextView(GlanceTtsService.this);
+				AppSpritzer mSpritzer = new AppSpritzer(null, spritzerTextView);
+				spritzerTextView.setSpritzer(mSpritzer);
+				mSpritzer.setWpm(150);
+
+//				spritzerTextView = new TextView(GlanceTtsService.this);
+				spritzerTextView.setBackgroundColor(0xFF000000);
+				spritzerTextView.setTextColor(0xFFFFFFFF);
+				spritzerTextView.setTextSize(30, TypedValue.COMPLEX_UNIT_SP);
+				spritzerTextView.setTypeface(Typeface.MONOSPACE);
+				spritzerTextView.setText("Texte");
+				final WindowManager.LayoutParams params = new WindowManager.LayoutParams(
+						500,
+						90,
+						WindowManager.LayoutParams.TYPE_PHONE,
+						WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+						PixelFormat.TRANSLUCENT);
+
+				params.gravity = Gravity.CENTER;
+				params.x = 0;
+				params.y = 100;
+
+				windowManager.addView(spritzerTextView, params);
+//				mSpritzer.setTextAndStart(text,mSplitzerCallback,true);
+
 
 				System.out.println("PLaying: " + text);
+
+				new Thread(new Runnable() {
+					@Override
+					public void run() {
+						try {
+							Thread.sleep(2400);
+
+						}
+						catch (Exception e) {
+
+						}
+						finish();
+					}
+				}).start();
+
 //				try {
 //					Thread.sleep(1400);
 //				} catch (InterruptedException e) {
@@ -221,6 +250,7 @@ public class GlanceTtsService extends TextToSpeechService {
 
 	private void finish() {
 		if ( mCallback != null) {
+			windowManager.removeView(spritzerTextView);
 			sem.release();
 //			mCallback.done();
 //			System.out.println("done");
