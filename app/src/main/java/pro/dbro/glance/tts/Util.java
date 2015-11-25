@@ -2,8 +2,8 @@ package pro.dbro.glance.tts;
 
 import android.content.Context;
 import android.graphics.PixelFormat;
-import android.graphics.Typeface;
-import android.util.TypedValue;
+import android.os.Handler;
+import android.os.HandlerThread;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,28 +19,62 @@ import pro.dbro.glance.lib.SpritzerTextView;
  * Created by george on 11/24/15.
  */
 public class Util {
+    private SpritzerTextView spritzerTextView;
+    private HandlerThread ht;
+    private Handler hd;
 
-    public static View generateView(Context context) {
+    boolean inScreen = false;
+
+    public Util() {
+        ht = new HandlerThread("UTILHELPER");
+        ht.start();
+        hd = new Handler(ht.getLooper());
+
+    }
+
+    public synchronized  void doAction(Context context) {
+
+        try {
+            WindowManager windowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+
+            inScreen = false;
+            windowManager.removeView(spritzerTextView);
+        } catch (Exception e) {
+        }
+    }
+
+    public  void removeView(final Context context) {
+
+        hd.postDelayed(    new Runnable() {
+                        @Override
+                        public void run() {
+                            doAction(context);
+
+                        }
+                    }, 500);
+
+    }
+    public  View getView() {
+        return spritzerTextView;
+    }
+    public synchronized  View generateView(Context context) {
+        if ( spritzerTextView!=null && inScreen ) {
+            hd.removeCallbacksAndMessages(null);
+            return  spritzerTextView;
+        }
         WindowManager windowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-        LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
-        SpritzerTextView  spritzerTextView = (SpritzerTextView) inflater.inflate(R.layout.comp,null);
+        if ( spritzerTextView == null ) {
+            LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            spritzerTextView = (SpritzerTextView) inflater.inflate(R.layout.tts_component, null);
 
-//        SpritzerTextView spritzerTextView = new SpritzerTextView(context);
-        AppSpritzer mSpritzer = new AppSpritzer(null, spritzerTextView);
-        spritzerTextView.setSpritzer(mSpritzer);
+            AppSpritzer mSpritzer = new AppSpritzer(spritzerTextView);
+            spritzerTextView.setSpritzer(mSpritzer);
 
-        int mWpm = GlancePrefsManager.getWpm(context);
-        System.out.println(mWpm );
+            int mWpm = GlancePrefsManager.getWpm(context);
+            mSpritzer.setWpm(mWpm);
+        }
 
-        mSpritzer.setWpm(mWpm );
-
-//				spritzerTextView = new TextView(GlanceTtsService.this);
-//        spritzerTextView.setBackgroundColor(0xFF000000);
-//        spritzerTextView.setTextColor(0xFFFFFFFF);
-//        spritzerTextView.setTextSize(30, TypedValue.COMPLEX_UNIT_SP);
-//        spritzerTextView.setTypeface(Typeface.MONOSPACE);
-        spritzerTextView.setText("Texto");
         final WindowManager.LayoutParams params = new WindowManager.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT,
@@ -49,10 +83,11 @@ public class Util {
                 PixelFormat.TRANSLUCENT);
 
         params.gravity = Gravity.CENTER;
-  //      params.x = 0;
-  //      params.y = 100;
+
+
 
         windowManager.addView(spritzerTextView, params);
+        inScreen = true;
         return spritzerTextView;
     }
 

@@ -14,9 +14,6 @@ import android.speech.tts.TextToSpeech;
 import android.speech.tts.TextToSpeechService;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
-import android.view.MotionEvent;
-import android.view.View;
-import android.view.WindowManager;
 
 import pro.dbro.glance.lib.Spritzer;
 import pro.dbro.glance.lib.SpritzerTextView;
@@ -43,6 +40,8 @@ public class GlanceTtsService extends TextToSpeechService {
 	private Object mAvailableVoices;
 	private SynthesisCallback mCallback;
 
+	private Util util = new Util();
+
 	private HandlerThread ht = new HandlerThread("HELPER");
 
 	private Spritzer.SpritzerCallback mSplitzerCallback = new Spritzer.SpritzerCallback() {
@@ -51,9 +50,6 @@ public class GlanceTtsService extends TextToSpeechService {
          finish(false);
      }
  };
-	private SpritzerTextView  spritzerTextView;
-	private WindowManager windowManager;
-	private boolean error;
 
 	@Override
 	public void onCreate() {
@@ -129,15 +125,7 @@ public class GlanceTtsService extends TextToSpeechService {
 			return;
 		}
 
-//		mEngine.setSpeechRate(speechrate);
-
 		mCallback = callback;
-
-
-
-//		callback.start(16000,                   				new ImageView(this);
-
-//		                AudioFormat.ENCODING_PCM_16BIT, 1);
 
 		Handler hd = new Handler(ht.getLooper());
 
@@ -145,49 +133,21 @@ public class GlanceTtsService extends TextToSpeechService {
 			@Override
 			public void run() {
 
-				windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
-
-				spritzerTextView = (SpritzerTextView) Util.generateView(GlanceTtsService.this);
+				SpritzerTextView spritzerTextView = (SpritzerTextView) util.generateView(GlanceTtsService.this);
 				spritzerTextView.getSpritzer().setTextAndStart(text, mSplitzerCallback, true);
-
-				spritzerTextView.setOnTouchListener(new View.OnTouchListener() {
-					@Override
-					public boolean onTouch(View view, MotionEvent motionEvent) {
-						finish(true);
-						return true;
-					}
-				});
 
 
 			}
 		});
 
-//        Integer rate = new Integer(mEngine.getSampleRate());
-//        Log.e(LOG_TAG, rate.toString());
-//		mCallback.start(16000, AudioFormat.ENCODING_PCM_16BIT, 1);
-//		mEngine.synthesize(text);
 		sem = new Semaphore(0);
 
 		try {
 			sem.acquire();
 		} catch (InterruptedException e) {
 		}
-		if (error) {
-			mCallback.error();
-		}
-		else {
-			mCallback.done();
-		}
+		mCallback.done();
 	}
-
-	     /*
-	     +        Intent sendableIntent = new Intent("hehe");
-	     +        LocalBroadcastManager.getInstance(this).
-	     +                sendBroadcast(sendableIntent);
-	     +
-+        <item name="android:windowBackground">@android:color/transparent</item>
-
-	      */
 
 	/**
 	 * Listens for language update broadcasts and initializes the flite engine.
@@ -206,15 +166,9 @@ public class GlanceTtsService extends TextToSpeechService {
 	};
 
 	private void finish(boolean b) {
-		if ( mCallback != null && spritzerTextView!=null &&windowManager!=null) {
-			error=b;
-			windowManager.removeView(spritzerTextView);
+		if ( mCallback != null ) {
+			util.removeView(this);
 			sem.release();
-			spritzerTextView = null;
-			windowManager = null;
-//			mCallback.done();
-//			System.out.println("done");
-//			mCallback=null;
 		}
 	}
 }
